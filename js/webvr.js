@@ -1,8 +1,8 @@
 (function(){
 	window.VR = window.VR || {};
-	VR.instance = {};
-	VR.methods = {};
-	VR.clazz = {};
+	VR.instance = VR.instance || {};
+	VR.methods = VR.methods || {};
+	VR.clazz = VR.clazz || {};
 	
 	/**
 	 * Eye
