@@ -73,21 +73,24 @@
 		// Framework
 		targetEyeLeft: undefined,
 		targetEyeRight: undefined,
+		meshEyeLeft: undefined,
+		meshEyeRight: undefined,
 		outputScene:undefined,
 		outputCamera: undefined,
+		
 		constructor: VR.clazz.Instance,
 		initInstance: function(options){
 			this.options = $.extend({}, {mode: 'MONO'}, options);
 			this.container = this.options.el;
 			this.scene = new THREE.Scene();
 			this.camera = new THREE.PerspectiveCamera( 75, 1, 0.1, 1000 );
-			this.targetEyeLeft = new THREE.WebGLRenderTarget(256, 256, {});
+			this.targetEyeLeft = new THREE.WebGLRenderTarget(256, 256, {format: THREE.RGBFormat});
 			switch (this.options.mode) {
 				case 'SBS': {
-					this.targetEyeRight = new THREE.WebGLRenderTarget(256, 256, {});
+					this.targetEyeRight = new THREE.WebGLRenderTarget(256, 256, {format: THREE.RGBFormat});
 				} break;
 				default: {
-					this.eyeRight = nil;
+					this.targetEyeRight = nil;
 				} break;
 			}
 			this.renderer = new THREE.WebGLRenderer();
@@ -101,12 +104,30 @@
 			this.cameras['main'] = this.perspective;
 			this.scene.add(this.perspective);
 			
+			var plane = new THREE.PlaneBufferGeometry(5, 5);
+
+			var quad = new THREE.Mesh( plane, new THREE.MeshBasicMaterial({wireframe: true, color: 0xFFFFFF}) );
+			quad.position.z = -10;
+			this.scene.add( quad );
+			
 			// Framework
 			var width = 512;
 			var height = 256;
 			this.outputScene = new THREE.Scene();
 			this.outputCamera = new THREE.OrthographicCamera( width / - 2, width / 2, height / 2, height / - 2, 1, 10 );
 			this.outputScene.add(this.outputCamera);
+	
+			this.meshEyeLeft = new THREE.Mesh(VR.utils.generateDistortionMesh(), new THREE.MeshBasicMaterial({wireframe: false, map: this.targetEyeLeft}));
+			
+			this.meshEyeRight = new THREE.Mesh(VR.utils.generateDistortionMesh(), new THREE.MeshBasicMaterial({wireframe: false, map: this.targetEyeRight}));
+			
+			this.meshEyeLeft.position.set( -128, 0, -1);
+			this.meshEyeLeft.scale.set(128,128,1);
+			this.meshEyeRight.position.set( 128, 0, -1);
+			this.meshEyeRight.scale.set(128,128,1);
+			
+			this.outputScene.add(this.meshEyeLeft);
+			this.outputScene.add(this.meshEyeRight);
 		},
 		start: function(){
 			var that = this;
@@ -115,20 +136,21 @@
 		},
 		render: function() {
 			
-			this.renderer.clear();
-			this.renderer.setViewport(0, 0, 256, 256);
+			//this.renderer.setViewport(0, 0, 256, 256);
+			this.renderer.setClearColor( 0x222222, 1 );
 			this.renderer.render(this.scene, this.perspective.left.camera, this.targetEyeLeft, true);
 			switch (this.options.mode) {
 				case 'SBS': {
 					this.renderer.clear();
-					this.renderer.setViewport(0, 0, 256, 256);
+					this.renderer.setClearColor( 0x555555, 1 );
 					this.renderer.render(this.scene, this.perspective.right.camera, this.targetEyeRight, true);
 				} break;
 			}
 			
-			this.renderer.setViewport(0, 0, 256, 256);
-			
-			this.renderer.setViewport(256, 0, 256, 256);
+			this.renderer.clear();
+			this.renderer.setClearColor( 0x111111, 1 );
+			this.renderer.setViewport(0, 0, 512, 256);
+			this.renderer.render(this.outputScene, this.outputCamera, undefined, true);
 		}
 	};
 	
