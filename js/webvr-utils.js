@@ -4,7 +4,7 @@
 	
 	VR.utils.generateDistortionMesh = function(options){
 		options = $.extend({}, {left: true, k1:0, k2: 0, quality: 16}, options);
-		var lines, columns, leftEye, k1, k2, numVertices, numFaces, indexCount, center, x, y, geom, vertex = {x:0,y:0,z:0}, tIndex, bIndex, fIndex = 0, lx, hx, ly, hy;
+		var lines, columns, leftEye, k1, k2, numVertices, numFaces, indexCount, center, x, y, geom, vertex = {x:0,y:0,z:0}, tIndex, bIndex, fIndex = 0, lx, hx, ly, hy, x2, y2;
 		k1 = options.k1;
 		k2 = options.k2;
 		leftEye = options.left === true;
@@ -13,7 +13,7 @@
 		numVertices = (lines + 1) * (columns + 1);
 		numFaces = lines * columns;
 		indexCount = numFaces * 6;
-		center = {x:0, y:0};
+		center = {x:0.0, y:0.0};
 		
 		geom = new THREE.Geometry();
 	
@@ -21,13 +21,21 @@
 			for(x=0; x<=columns; x++){
 				var index = y*(lines+1)+x;
 				
-				var rSqr = Math.pow(center.x-((x* 1.0)/(columns * 1.0)),2) + Math.pow (center.y-((y * 1.0)/(lines * 1.0)),2);
-				var rMod = 1+k1*rSqr+k2*rSqr*rSqr;
+				x2 = x < (columns / 2) ? (columns) - x : x;
+				y2 = y < (lines / 2) ? (lines) - y : y;
 				
-				vertex.x = ((x * 1.0)/(columns * 1.0) - center.x)/(rMod * 1.0) + center.x - 0.5;
-				vertex.y = ((y * 1.0)/(lines * 1.0) - center.y)/(rMod * 1.0) + center.y - 0.5;
+				var rSqr = Math.pow(center.x-((x2 * 1.0)/(columns * 1.0)),2) + Math.pow (center.y-((y2 * 1.0)/(lines * 1.0)),2);
+				var rMod = 1.0 + k1 * rSqr + k2 * rSqr * rSqr;
 				
-				//console.log(vertex);
+				console.log({x:x, x2:x2, y:y, y2:y2, rMod: rMod});
+				
+				x2 = x - (columns / 2);
+				y2 = y - (lines / 2);
+				
+				vertex.x = ((x2 * 1.0)/((columns * 1.0) - center.x))/((rMod * 1.0) + center.x);
+				vertex.y = ((y2 * 1.0)/((lines * 1.0) - center.y))/((rMod * 1.0) + center.y);
+				
+				console.log(vertex);
 				
 				geom.vertices.push(new THREE.Vector3(vertex.x,vertex.y,vertex.z));
 				
