@@ -85,23 +85,29 @@
 		
 		constructor: VR.clazz.Instance,
 		initInstance: function(options){
+			
 			this.options = $.extend({}, {mode: 'MONO'}, options);
+			
+			// Framework
+			var width = 1024;
+			var height = width / 2;
+			
 			this.container = this.options.el;
 			this.scene = new THREE.Scene();
 			this.camera = new THREE.PerspectiveCamera( 75, 1, 0.1, 1000 );
-			this.targetEyeLeft = new THREE.WebGLRenderTarget(256, 256, {format: THREE.RGBFormat});
+			this.targetEyeLeft = new THREE.WebGLRenderTarget(1024, 1024, {format: THREE.RGBFormat, anisotropy: 2});
 			this.targetEyeLeft.autoClear = false;
 			switch (this.options.mode) {
 				case 'SBS': {
-					this.targetEyeRight = new THREE.WebGLRenderTarget(256, 256, {format: THREE.RGBFormat});
-					this.targetEyeLeft.autoClear = false;
+					this.targetEyeRight = new THREE.WebGLRenderTarget(1024, 1024, {format: THREE.RGBFormat, anisotropy: 2});
+					this.targetEyeRight.autoClear = false;
 				} break;
 				default: {
 					this.targetEyeRight = nil;
 				} break;
 			}
-			this.renderer = new THREE.WebGLRenderer();
-			this.renderer.setSize(512, 256);			
+			this.renderer = new THREE.WebGLRenderer({antialias:true});
+			this.renderer.setSize(width, height);			
 			this.renderer.autoClear = false;
 			
 			this.cameras = {};
@@ -113,26 +119,24 @@
 			
 			var plane = new THREE.PlaneBufferGeometry(5, 5);
 
-			var quad = new THREE.Mesh( plane, new THREE.MeshBasicMaterial({wireframe: true, color: 0xFFFFFF}) );
+			var quad = new THREE.Mesh( plane, new THREE.MeshBasicMaterial({wireframe: false, color: 0xFFFFFF, shading: THREE.FlatShading}) );
 			quad.position.z = -10;
 			quad.rotation.set(Math.PI/4, Math.PI/4, Math.PI/4);
 			this.scene.add( quad );
 			
-			// Framework
-			var width = 512;
-			var height = 256;
+			
 			this.outputScene = new THREE.Scene();
 			this.outputCamera = new THREE.OrthographicCamera( width / - 2, width / 2, height / 2, height / - 2, 1, 10 );
 			this.outputScene.add(this.outputCamera);
 	
-			this.meshEyeLeft = new THREE.Mesh(VR.utils.generateDistortionMesh({k1:0.01, k2: 0.01, quality:6}), new THREE.MeshBasicMaterial({wireframe: false, map: this.targetEyeLeft}));
+			this.meshEyeLeft = new THREE.Mesh(VR.utils.generateDistortionMesh({k1:0.02, k2: 0.02, quality:6}), new THREE.MeshBasicMaterial({wireframe: false, map: this.targetEyeLeft, shading:THREE.FlatShading, fog: false}));
 			
-			this.meshEyeRight = new THREE.Mesh(VR.utils.generateDistortionMesh({k1:0.01, k2: 0.01, quality:6}), new THREE.MeshBasicMaterial({wireframe: false, map: this.targetEyeRight}));
+			this.meshEyeRight = new THREE.Mesh(VR.utils.generateDistortionMesh({k1:0.02, k2: 0.02, quality:6}), new THREE.MeshBasicMaterial({wireframe: false, map: this.targetEyeRight, shading: THREE.FlatShading, fog: false}));
 			
-			this.meshEyeLeft.position.set( -128, 0, -1);
-			this.meshEyeLeft.scale.set(256,256,1);
-			this.meshEyeRight.position.set( 128, 0, -1);
-			this.meshEyeRight.scale.set(256,256,1);
+			this.meshEyeLeft.position.set( -256, 0, -1);
+			this.meshEyeLeft.scale.set(512,512,1);
+			this.meshEyeRight.position.set( 256, 0, -1);
+			this.meshEyeRight.scale.set(512,512,1);
 			
 			this.outputScene.add(this.meshEyeLeft);
 			this.outputScene.add(this.meshEyeRight);
@@ -144,7 +148,7 @@
 		},
 		render: function() {
 			this.renderer.clear();
-			//this.renderer.setViewport(0, 0, 256, 256);
+			
 			this.renderer.setClearColor( 0x000000, 1 );
 			this.renderer.render(this.scene, this.perspective.left.camera, this.targetEyeLeft, false);
 			switch (this.options.mode) {
@@ -154,7 +158,7 @@
 			}
 			
 			this.renderer.setClearColor( 0xFF0000, 1 );
-			this.renderer.setViewport(0, 0, 512, 256);
+			this.renderer.setViewport(0, 0, 1024, 512);
 			this.renderer.render(this.outputScene, this.outputCamera, undefined, true);
 		}
 	};
