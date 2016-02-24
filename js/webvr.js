@@ -93,14 +93,14 @@
 			var height = width / 2;
 			
 			this.container = this.options.el;
-			this.scene = new THREE.Scene();
+			this.scene = options.source && options.source.onInit ? options.source.onInit() : new THREE.Scene();
 			this.camera = new THREE.PerspectiveCamera( 75, 1, 0.1, 1000 );
 			this.targetEyeLeft = new THREE.WebGLRenderTarget(1024, 1024, {format: THREE.RGBFormat, anisotropy: 2});
-			this.targetEyeLeft.autoClear = false;
+			this.targetEyeLeft.autoClear = true;
 			switch (this.options.mode) {
 				case 'SBS': {
 					this.targetEyeRight = new THREE.WebGLRenderTarget(1024, 1024, {format: THREE.RGBFormat, anisotropy: 2});
-					this.targetEyeRight.autoClear = false;
+					this.targetEyeRight.autoClear = true;
 				} break;
 				default: {
 					this.targetEyeRight = nil;
@@ -108,7 +108,7 @@
 			}
 			this.renderer = new THREE.WebGLRenderer({antialias:true});
 			this.renderer.setSize(width, height);			
-			this.renderer.autoClear = false;
+			this.renderer.autoClear = true;
 			
 			this.cameras = {};
 			
@@ -116,14 +116,6 @@
 			this.perspective = new VR.clazz.Head();
 			this.cameras['main'] = this.perspective;
 			this.scene.add(this.perspective);
-			
-			var plane = new THREE.PlaneBufferGeometry(5, 5);
-
-			var quad = new THREE.Mesh( plane, new THREE.MeshBasicMaterial({wireframe: false, color: 0xFFFFFF, shading: THREE.FlatShading}) );
-			quad.position.z = -10;
-			quad.rotation.set(Math.PI/4, Math.PI/4, Math.PI/4);
-			this.scene.add( quad );
-			
 			
 			this.outputScene = new THREE.Scene();
 			this.outputCamera = new THREE.OrthographicCamera( width / - 2, width / 2, height / 2, height / - 2, 1, 10 );
@@ -141,13 +133,15 @@
 			this.outputScene.add(this.meshEyeLeft);
 			this.outputScene.add(this.meshEyeRight);
 		},
-		start: function(){
+		start: function(timeSince, timeSince3){
 			var that = this;
-			requestAnimationFrame(function() {that.render()});
-			this.render();
+			requestAnimationFrame(function(timeSince2) {that.start(timeSince2, timeSince2 - timeSince)});
+			this.render(timeSince3 ? timeSince3 : 0.01);
 		},
-		render: function() {
+		render: function(timeSince) {
 			this.renderer.clear();
+			
+			this.options.source.onFrame(timeSince);
 			
 			this.renderer.setClearColor( 0x000000, 1 );
 			this.renderer.render(this.scene, this.perspective.left.camera, this.targetEyeLeft, false);
@@ -164,13 +158,3 @@
 	};
 	
 }());
-
-
-$(function(){
-	
-	VR.instance = new VR.clazz.Instance({el:$('#webvr'), mode:'SBS'});
-
-	VR.instance.start();
-	
-	//VR.methods.animate();
-});

@@ -27,7 +27,7 @@
 				var rSqr = Math.pow(center.x-((x2 * 1.0)/(columns * 1.0)),2) + Math.pow (center.y-((y2 * 1.0)/(lines * 1.0)),2);
 				var rMod = 1.0 + k1 * rSqr + k2 * rSqr * rSqr;
 				
-				console.log({x:x, x2:x2, y:y, y2:y2, rMod: rMod});
+				//console.log({x:x, x2:x2, y:y, y2:y2, rMod: rMod});
 				
 				x2 = x - (columns / 2);
 				y2 = y - (lines / 2);
@@ -35,24 +35,9 @@
 				vertex.x = ((x2 * 1.0)/((columns * 1.0) - center.x))/((rMod * 1.0) + center.x);
 				vertex.y = ((y2 * 1.0)/((lines * 1.0) - center.y))/((rMod * 1.0) + center.y);
 				
-				console.log(vertex);
+				//console.log(vertex);
 				
 				geom.vertices.push(new THREE.Vector3(vertex.x,vertex.y,vertex.z));
-				
-			/*
-            points[index].x = vertex.x;
-            points[index].y = vertex.y;
-            points[index].z = 0;
-            
-            points[index].ux = (float)x/(float)columns;
-            points[index].uy = (float)y/(float)lines;
-            
-            if(x<_columns && y<lines){
-                for(int v=0; v < 6; v++){
-                    indexes[numQuad*6+v] = index + ((v>=2 && v!=3) ? _columns : 0) + ((v==0) ? 0 : (v/5)+1);
-                }
-                numQuad++;
-            }*/
 			}
 		}
 		
